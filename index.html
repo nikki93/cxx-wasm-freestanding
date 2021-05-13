@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="zig wasm test" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+    <!-- Styles -->
+    <style>
+      body {
+        background-color: #121212;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- JavaScript -->
+    <script type="text/javascript">
+      //
+      // WASM memory interaction
+      //
+
+      let memory;
+
+      const utf8Decoder = new TextDecoder('utf-8');
+      const readUTF8 = (ptr, len) => utf8Decoder.decode(new Uint8Array(memory.buffer, ptr, len));
+
+      const utf8Encoder = new TextEncoder('utf-8');
+      let writeUTF8;
+      if (utf8Encoder.encodeInto) {
+        writeUTF8 = (val, ptr, len) =>
+          utf8Encoder.encodeInto(val, new Uint8Array(memory.buffer, ptr, len)).written;
+      } else {
+        writeUTF8 = (val, ptr, len) => {
+          const encoded = utf8Encoder.encode(val);
+          len = Math.min(len, encoded.length);
+          new Uint8Array(memory.buffer, ptr, len).set(encoded.slice(0, len));
+          return len;
+        };
+      }
+
+      //
+      // Exports to WASM
+      //
+
+      const env = {};
+
+      // Console
+
+      env.consoleLog = (msgPtr, msgLen) => console.log(readUTF8(msgPtr, msgLen));
+
+      //
+      // Instantiate WASM
+      //
+
+      (async () => {
+        let instance;
+        try {
+          const response = await fetch('main.wasm?ts=' + new Date().getTime());
+          const bytes = await response.arrayBuffer();
+          ({ instance } = await WebAssembly.instantiate(bytes, { env }));
+        } catch (e) {
+          console.log(`error instantiating wasm: ${e}`);
+          return;
+        }
+
+        memory = instance.exports.memory;
+
+        if (instance.exports.init) {
+          instance.exports.init();
+        }
+
+        if (instance.exports.frame) {
+          const frame = () => {
+            if (document.hasFocus()) {
+              instance.exports.frame();
+            }
+            requestAnimationFrame(frame);
+          };
+          requestAnimationFrame(frame);
+        }
+      })();
+    </script>
+  </body>
+</html>
