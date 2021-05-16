@@ -5,16 +5,6 @@
 // Standard-library-based metaprogramming utiltities
 //
 
-// EnableIf
-template<bool B, typename T = void>
-struct EnableIfStruct {};
-template<typename T>
-struct EnableIfStruct<true, T> {
-  using Type = T;
-};
-template<bool B, typename T = void>
-using EnableIf = typename EnableIfStruct<B, T>::Type;
-
 // isAggregate
 template<typename T>
 constexpr auto isAggregate = __is_aggregate(T);
@@ -101,13 +91,13 @@ auto declval() -> decltype(declval<T>(0)) {
 
 template<typename Value_, typename Internal>
 struct Prop {
-  template<typename Value2_ = Value_, EnableIf<!isAggregate<Value2_>, int> = 0, typename... Args>
-  Prop(Args &&...args) // NOLINT(google-explicit-constructor)
+  template<typename... Args>
+  requires(!isAggregate<Value_>) Prop(Args &&...args) // NOLINT(google-explicit-constructor)
       : value(forward<Args>(args)...) {
   }
 
-  template<typename Value2_ = Value_, EnableIf<isAggregate<Value2_>, int> = 0, typename... Args>
-  Prop(Args &&...args) // NOLINT(google-explicit-constructor)
+  template<typename... Args>
+  requires(isAggregate<Value_>) Prop(Args &&...args) // NOLINT(google-explicit-constructor)
       : value { forward<Args>(args)... } {
   }
 
