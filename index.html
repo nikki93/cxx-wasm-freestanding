@@ -56,7 +56,7 @@
       (async () => {
         let instance;
         try {
-          const response = await fetch('main.wasm?ts=' + new Date().getTime());
+          const response = await fetch('all.wasm?ts=' + new Date().getTime());
           const bytes = await response.arrayBuffer();
           ({ instance } = await WebAssembly.instantiate(bytes, { env }));
         } catch (e) {

@@ -15,31 +15,33 @@ case $PLATFORM in
   lin)
     clang++-11 \
       -std=c++20 \
+      -Wno-pragma-once-outside-header \
       --target=wasm32 \
       -emit-llvm \
       -c \
       -S \
-      main.cc
+      all.cc
     llc-11 \
       -march=wasm32 \
       -filetype=obj \
-      main.ll
+      all.ll
     wasm-ld-11 \
       --allow-undefined \
       --no-entry \
       --export-all \
-      -o main.wasm \
-      main.o
+      -o all.wasm \
+      all.o
     ;;
   win)
     clang.exe \
+      -std=c++20 \
+      -Wno-pragma-once-outside-header \
       --target=wasm32 \
       --no-standard-libraries \
       -Wl,--allow-undefined \
       -Wl,--export-all \
       -Wl,--no-entry \
-      -std=c++20 \
-      -o main.wasm \
-      main.cc
+      -o all.wasm \
+      all.cc
     ;;
 esac

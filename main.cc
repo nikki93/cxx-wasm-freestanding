@@ -1,5 +1,5 @@
-#include "meta.cc"
-#include "io.cc"
+#pragma once
+#include "all.cc"
 
 
 struct Test1 {
